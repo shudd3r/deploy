@@ -1,0 +1,34 @@
+{
+    "name": "shudd3r/deploy",
+    "description": "Git hook deploy handler",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "shudd3r",
+            "email": "q3.shudder@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": "^7.4 || ^8.0"
+    },
+    "require-dev": {
+        "polymorphine/dev": "0.2.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Shudd3r\\Deploy\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Shudd3r\\Deploy\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test-cs": "php-cs-fixer --dry-run -v --config=cs-fixer.php.dist --path-mode=intersection fix src tests",
+        "test-php": "phpunit"
+    }
+}
