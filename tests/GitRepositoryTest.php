@@ -12,23 +12,30 @@
 namespace Shudd3r\Deploy\Tests;
 
 use PHPUnit\Framework\TestCase;
+use Shudd3r\Deploy\GitArchive;
 use Shudd3r\Deploy\GitRepository;
 
 
 class GitRepositoryTest extends TestCase
 {
-    public function testExists_ForLocationsOutsideGitRepository_ReturnsFalse()
+    public function testArchiveMethod_ForLocationsOutsideGitRepository_ReturnsNull()
     {
         $repository = new GitRepository('Not a path');
-        $this->assertFalse($repository->exists());
+        $this->assertNull($repository->archive('test'));
 
         $repository = new GitRepository(__DIR__ . '/Fixtures');
-        $this->assertFalse($repository->exists());
+        $this->assertNull($repository->archive('test'));
     }
 
-    public function testExists_InGitRepository_ReturnsTrue()
+    public function testArchiveMethod_ForUnresolvedReference_ReturnsNull()
     {
         $repository = new GitRepository(__DIR__ . '/Fixtures/remote-repo');
-        $this->assertTrue($repository->exists());
+        $this->assertNull($repository->archive('test'));
+    }
+
+    public function testArchiveMethod_ForResolvedReference_ReturnsGitArchiveInstance()
+    {
+        $repository = new GitRepository(__DIR__ . '/Fixtures/remote-repo');
+        $this->assertInstanceOf(GitArchive::class, $repository->archive('develop'));
     }
 }

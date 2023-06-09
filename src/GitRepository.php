@@ -21,7 +21,20 @@ class GitRepository
         $this->directory = $directory;
     }
 
-    public function exists(): bool
+    public function archive(string $ref, string $subdirectory = ''): ?GitArchive
+    {
+        if (!$this->exists()) { return null; }
+
+        $filename = $ref . '.zip';
+        $archive  = new GitArchive($this->directory . '/' . $filename);
+        $prefix   = $subdirectory ? ' --prefix=' . $subdirectory . '/' : '';
+        $command  = 'git archive ' . $ref . $prefix . ' --format zip --output ' . $filename;
+
+        exec($command . ' 2>&1', $error);
+        return $error ? null : $archive;
+    }
+
+    private function exists(): bool
     {
         if (!is_dir($this->directory)) { return false; }
         chdir($this->directory);
