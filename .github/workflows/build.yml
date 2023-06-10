@@ -10,7 +10,7 @@ jobs:
         operating-system: ['ubuntu-latest']
         php-versions: ['7.4']
     env:
-      extensions: pcov, dom, json, libxml, mbstring, pdo_sqlite, soap, xml, xmlwriter
+      extensions: pcov, dom, json, libxml, mbstring, pdo_sqlite, soap, xml, xmlwriter, zip
       key: cache-v2
     steps:
       - name: "Checkout"
@@ -65,7 +65,7 @@ jobs:
         operating-system: ['ubuntu-latest']
         php-versions: ['8.0', '8.1', '8.2']
     env:
-      extensions: dom, json, libxml, mbstring, pdo_sqlite, soap, xml, xmlwriter
+      extensions: dom, json, libxml, mbstring, pdo_sqlite, soap, xml, xmlwriter, zip
       key: cache-v2
     steps:
       - name: "Turn off git EOL conversion"

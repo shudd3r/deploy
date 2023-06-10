@@ -11,23 +11,32 @@
 
 namespace Shudd3r\Deploy;
 
+use ZipArchive;
+use InvalidArgumentException;
+
 
 class GitArchive
 {
-    private string $filename;
+    private ZipArchive $archive;
 
-    public function __construct(string $filename)
+    public function __construct(ZipArchive $archive)
     {
-        $this->filename = $filename;
+        if (!$archive->numFiles) {
+            throw new InvalidArgumentException();
+        }
+        $this->archive = $archive;
     }
 
     public function __destruct()
     {
-        if (is_file($this->filename)) { unlink($this->filename); }
+        $filename = $this->archive->filename;
+        $this->archive->close();
+        unset($this->archive);
+        unlink($filename);
     }
 
-    public function exists(): bool
+    public function numberOfFiles(): int
     {
-        return is_file($this->filename);
+        return $this->archive->numFiles;
     }
 }

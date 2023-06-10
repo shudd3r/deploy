@@ -13,32 +13,94 @@ namespace Shudd3r\Deploy\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Shudd3r\Deploy\GitArchive;
+use ZipArchive;
+use InvalidArgumentException;
 
 
 class GitArchiveTest extends TestCase
 {
-    public function testExistsMethod_ForNotExistingArchiveFile_ReturnsFalse()
+    public function testInstanceWithNotInitializedArchive_ThrowsException()
     {
-        $archive = new GitArchive(__DIR__ . '/foo.txt');
-        $this->assertFalse($archive->exists());
+        $zip = new ZipArchive();
+
+        $this->expectException(InvalidArgumentException::class);
+        new GitArchive($zip);
     }
 
-    public function testExistsMethod_ForExistingArchiveFile_ReturnsTrue()
+    public function testInstanceWithEmptyArchiveFile_ThrowsExceptionAndFileIsRemoved()
     {
-        $filename = sys_get_temp_dir() . '/tests.txt';
-        file_put_contents($filename, 'xxx');
-        $archive = new GitArchive($filename);
-        $this->assertTrue($archive->exists());
+        $zip = new ZipArchive();
+        $zip->open($filename = $this->tempFile());
+
+        try {
+            new GitArchive($zip);
+        } catch (InvalidArgumentException $e) {
+            $zip->close();
+            $this->assertFileDoesNotExist($filename);
+        }
     }
 
-    public function testFileIsRemovedAfterArchiveObjectIsDestroyed()
+    public function testInstanceWithInvalidArchiveFile_ThrowsExceptionAndFileIsNotRemoved()
     {
-        $filename = sys_get_temp_dir() . '/tests.txt';
-        file_put_contents($filename, 'xxx');
-        $archive = new GitArchive($filename);
-        $this->assertTrue($archive->exists());
-        $this->assertTrue(is_file($filename));
+        file_put_contents($filename = $this->tempFile(), 'not archive contents');
+        $zip = new ZipArchive();
+        $zip->open($filename);
+
+        try {
+            new GitArchive($zip);
+        } catch (InvalidArgumentException $e) {
+            $this->assertFileExists($filename);
+            unlink($filename);
+        }
+    }
+
+    public function testExistingArchiveFile_IsRemovedWithObjectReference()
+    {
+        $this->createArchive($filename = $this->tempFile(), ['a.txt' => 'aaa']);
+        $zip = new ZipArchive();
+        $zip->open($filename);
+
+        $archive = new GitArchive($zip);
+        $this->assertFileExists($filename);
+
         unset($archive);
-        $this->assertFalse(is_file($filename));
+        $this->assertFileDoesNotExist($filename);
+    }
+
+    /**
+     * @dataProvider exampleArchiveFiles
+     */
+    public function testNumberOfFiles_ReturnsNumberOfFilesInArchive(array $files)
+    {
+        $this->createArchive($filename = $this->tempFile(), $files);
+        $zip = new ZipArchive();
+        $zip->open($filename);
+
+        $archive = new GitArchive($zip);
+        $this->assertSame(count($files), $archive->numberOfFiles());
+    }
+
+    public static function exampleArchiveFiles(): array
+    {
+        return [
+            [['a.txt' => 'a contents']],
+            [['a.txt' => 'aaa', 'b.txt' => 'bbb']],
+            [['foo.txt' => 'this is foo', 'foo/bar.txt' => 'this is bar', 'dir/baz.txt' => 'baz contents']]
+        ];
+    }
+
+    private function createArchive(string $filename, array $fileContents = []): void
+    {
+        $zip = new ZipArchive();
+        $zip->open($filename, ZipArchive::CREATE);
+        foreach ($fileContents as $file => $contents) {
+            $zip->addFromString($file, $contents);
+        }
+        $zip->close();
+    }
+
+    private function tempFile(): string
+    {
+        return tempnam(sys_get_temp_dir(), 'git');
     }
 }

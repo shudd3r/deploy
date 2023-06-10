@@ -22,20 +22,37 @@ class GitRepositoryTest extends TestCase
     {
         $repository = new GitRepository('Not a path');
         $this->assertNull($repository->archive('test'));
+        $this->assertNoArchiveFile();
 
         $repository = new GitRepository(__DIR__ . '/Fixtures');
         $this->assertNull($repository->archive('test'));
+        $this->assertNoArchiveFile();
     }
 
     public function testArchiveMethod_ForUnresolvedReference_ReturnsNull()
     {
         $repository = new GitRepository(__DIR__ . '/Fixtures/remote-repo');
         $this->assertNull($repository->archive('test'));
+        $this->assertNoArchiveFile();
     }
 
     public function testArchiveMethod_ForResolvedReference_ReturnsGitArchiveInstance()
     {
         $repository = new GitRepository(__DIR__ . '/Fixtures/remote-repo');
-        $this->assertInstanceOf(GitArchive::class, $repository->archive('develop'));
+        $archive    = $repository->archive('develop');
+        $this->assertInstanceOf(GitArchive::class, $archive);
+        $this->assertFileExists(sys_get_temp_dir() . '/deploy.zip');
+    }
+
+    public function testArchiveMethod_ForCommitWithoutFiles_ReturnsNull()
+    {
+        $repository = new GitRepository(__DIR__ . '/Fixtures/remote-repo');
+        $this->assertNull($repository->archive('empty'));
+        $this->assertNoArchiveFile();
+    }
+
+    private function assertNoArchiveFile()
+    {
+        $this->assertFileDoesNotExist(sys_get_temp_dir() . '/deploy.zip');
     }
 }

@@ -11,6 +11,8 @@
 
 namespace Shudd3r\Deploy;
 
+use ZipArchive;
+
 
 class GitRepository
 {
@@ -21,17 +23,29 @@ class GitRepository
         $this->directory = $directory;
     }
 
-    public function archive(string $ref, string $subdirectory = ''): ?GitArchive
+    public function archive(string $ref, string $pathPrefix = ''): ?GitArchive
     {
         if (!$this->exists()) { return null; }
 
-        $filename = $ref . '.zip';
-        $archive  = new GitArchive($this->directory . '/' . $filename);
-        $prefix   = $subdirectory ? ' --prefix=' . $subdirectory . '/' : '';
+        $filename = sys_get_temp_dir() . '/deploy.zip';
+        $prefix   = $pathPrefix ? ' --prefix=' . $pathPrefix . '/' : '';
         $command  = 'git archive ' . $ref . $prefix . ' --format zip --output ' . $filename;
 
         exec($command . ' 2>&1', $error);
-        return $error ? null : $archive;
+        if ($error) {
+            is_file($filename) && unlink($filename);
+            return null;
+        }
+
+        $archive = new ZipArchive();
+        $archive->open($filename);
+        if (!$archive->numFiles) {
+            unset($archive);
+            is_file($filename) && unlink($filename);
+            return null;
+        }
+
+        return new GitArchive($archive);
     }
 
     private function exists(): bool
