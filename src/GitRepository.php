@@ -11,8 +11,6 @@
 
 namespace Shudd3r\Deploy;
 
-use ZipArchive;
-
 
 class GitRepository
 {
@@ -32,20 +30,9 @@ class GitRepository
         $command  = 'git archive ' . $ref . $prefix . ' --format zip --output ' . $filename;
 
         exec($command . ' 2>&1', $error);
-        if ($error) {
-            is_file($filename) && unlink($filename);
-            return null;
-        }
+        if ($error) { unlink($filename); }
 
-        $archive = new ZipArchive();
-        $archive->open($filename);
-        if (!$archive->numFiles) {
-            unset($archive);
-            is_file($filename) && unlink($filename);
-            return null;
-        }
-
-        return new GitArchive($archive);
+        return GitArchive::instance($filename);
     }
 
     private function exists(): bool

@@ -14,53 +14,33 @@ namespace Shudd3r\Deploy\Tests;
 use PHPUnit\Framework\TestCase;
 use Shudd3r\Deploy\GitArchive;
 use ZipArchive;
-use InvalidArgumentException;
 
 
 class GitArchiveTest extends TestCase
 {
-    public function testInstanceWithNotInitializedArchive_ThrowsException()
+    public function testInstance_WithNotFilePath_ReturnsNull()
     {
-        $zip = new ZipArchive();
-
-        $this->expectException(InvalidArgumentException::class);
-        new GitArchive($zip);
+        $this->assertNull(GitArchive::instance(__DIR__ . '/file-not-exists.zip'));
     }
 
-    public function testInstanceWithEmptyArchiveFile_ThrowsExceptionAndFileIsRemoved()
+    public function testInstance_WithEmptyArchiveFile_ReturnsNull()
     {
-        $zip = new ZipArchive();
-        $zip->open($filename = $this->tempFile());
-
-        try {
-            new GitArchive($zip);
-        } catch (InvalidArgumentException $e) {
-            $zip->close();
-            $this->assertFileDoesNotExist($filename);
-        }
+        $this->assertNull(GitArchive::instance($filename = $this->tempFile()));
+        unlink($filename);
     }
 
-    public function testInstanceWithInvalidArchiveFile_ThrowsExceptionAndFileIsNotRemoved()
+    public function testInstance_WithInvalidArchiveFile_ReturnsNull()
     {
         file_put_contents($filename = $this->tempFile(), 'not archive contents');
-        $zip = new ZipArchive();
-        $zip->open($filename);
-
-        try {
-            new GitArchive($zip);
-        } catch (InvalidArgumentException $e) {
-            $this->assertFileExists($filename);
-            unlink($filename);
-        }
+        $this->assertNull(GitArchive::instance($filename));
+        unlink($filename);
     }
 
-    public function testExistingArchiveFile_IsRemovedWithObjectReference()
+    public function testInstance_ArchiveFile_IsRemovedWithObjectReference()
     {
         $this->createArchive($filename = $this->tempFile(), ['a.txt' => 'aaa']);
-        $zip = new ZipArchive();
-        $zip->open($filename);
 
-        $archive = new GitArchive($zip);
+        $this->assertInstanceOf(GitArchive::class, $archive = GitArchive::instance($filename));
         $this->assertFileExists($filename);
 
         unset($archive);
@@ -73,10 +53,8 @@ class GitArchiveTest extends TestCase
     public function testNumberOfFiles_ReturnsNumberOfFilesInArchive(array $files)
     {
         $this->createArchive($filename = $this->tempFile(), $files);
-        $zip = new ZipArchive();
-        $zip->open($filename);
 
-        $archive = new GitArchive($zip);
+        $archive = GitArchive::instance($filename);
         $this->assertSame(count($files), $archive->numberOfFiles());
     }
 

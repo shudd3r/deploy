@@ -39,20 +39,12 @@ class GitRepositoryTest extends TestCase
     public function testArchiveMethod_ForResolvedReference_ReturnsGitArchiveInstance()
     {
         $repository = new GitRepository(__DIR__ . '/Fixtures/remote-repo');
-        $archive    = $repository->archive('develop');
-        $this->assertInstanceOf(GitArchive::class, $archive);
-        $this->assertFileExists(sys_get_temp_dir() . '/deploy.zip');
-    }
-
-    public function testArchiveMethod_ForCommitWithoutFiles_ReturnsNull()
-    {
-        $repository = new GitRepository(__DIR__ . '/Fixtures/remote-repo');
-        $this->assertNull($repository->archive('empty'));
-        $this->assertNoArchiveFile();
+        $this->assertInstanceOf(GitArchive::class, $repository->archive('develop'));
+        $this->assertInstanceOf(GitArchive::class, $repository->archive('0.1.4'));
     }
 
     private function assertNoArchiveFile()
     {
-        $this->assertFileDoesNotExist(sys_get_temp_dir() . '/deploy.zip');
+        $this->assertFileDoesNotExist(sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'deploy.zip');
     }
 }

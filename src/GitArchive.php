@@ -12,19 +12,23 @@
 namespace Shudd3r\Deploy;
 
 use ZipArchive;
-use InvalidArgumentException;
 
 
 class GitArchive
 {
     private ZipArchive $archive;
 
-    public function __construct(ZipArchive $archive)
+    private function __construct(ZipArchive $archive)
     {
-        if (!$archive->numFiles) {
-            throw new InvalidArgumentException();
-        }
         $this->archive = $archive;
+    }
+
+    public static function instance(string $filename): ?self
+    {
+        if (!is_file($filename) || filesize($filename) === 0) { return null; }
+
+        $archive = new ZipArchive();
+        return $archive->open($filename) === true ? new self($archive) : null;
     }
 
     public function __destruct()
