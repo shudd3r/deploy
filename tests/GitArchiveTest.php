@@ -13,38 +13,36 @@ namespace Shudd3r\Deploy\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Shudd3r\Deploy\GitArchive;
-use ZipArchive;
 
 
 class GitArchiveTest extends TestCase
 {
+    use Fixtures\FileSystemMethods;
+
     public function testInstance_WithNotFilePath_ReturnsNull()
     {
         $this->assertNull(GitArchive::instance(__DIR__ . '/file-not-exists.zip'));
     }
 
-    public function testInstance_WithEmptyArchiveFile_ReturnsNull()
+    public function testInstance_WithEmptyFile_ReturnsNull()
     {
-        $this->assertNull(GitArchive::instance($filename = $this->tempFile()));
-        unlink($filename);
+        $this->assertNull(GitArchive::instance($this->tempFile()));
     }
 
     public function testInstance_WithInvalidArchiveFile_ReturnsNull()
     {
-        file_put_contents($filename = $this->tempFile(), 'not archive contents');
-        $this->assertNull(GitArchive::instance($filename));
-        unlink($filename);
+        $this->assertNull(GitArchive::instance($this->createFile('not archive contents')));
     }
 
     public function testInstance_ArchiveFile_IsRemovedWithObjectReference()
     {
-        $this->createArchive($filename = $this->tempFile(), ['a.txt' => 'aaa']);
+        $archiveFile = $this->createArchive(['a.txt' => 'aaa']);
 
-        $this->assertInstanceOf(GitArchive::class, $archive = GitArchive::instance($filename));
-        $this->assertFileExists($filename);
+        $this->assertInstanceOf(GitArchive::class, $archive = GitArchive::instance($archiveFile));
+        $this->assertFileExists($archiveFile);
 
         unset($archive);
-        $this->assertFileDoesNotExist($filename);
+        $this->assertFileDoesNotExist($archiveFile);
     }
 
     /**
@@ -52,10 +50,21 @@ class GitArchiveTest extends TestCase
      */
     public function testNumberOfFiles_ReturnsNumberOfFilesInArchive(array $files)
     {
-        $this->createArchive($filename = $this->tempFile(), $files);
-
-        $archive = GitArchive::instance($filename);
+        $archive = GitArchive::instance($this->createArchive($files));
         $this->assertSame(count($files), $archive->numberOfFiles());
+    }
+
+    /**
+     * @dataProvider exampleArchiveFiles
+     */
+    public function testExtractToMethod_CreatesFilesInGivenDirectory(array $files)
+    {
+        $archive = GitArchive::instance($this->createArchive($files));
+        $archive->extractTo($target = $this->tempDir());
+        foreach ($files as $file => $contents) {
+            $filename = $target . DIRECTORY_SEPARATOR . $file;
+            $this->assertStringEqualsFile($filename, $contents);
+        }
     }
 
     public static function exampleArchiveFiles(): array
@@ -65,20 +74,5 @@ class GitArchiveTest extends TestCase
             [['a.txt' => 'aaa', 'b.txt' => 'bbb']],
             [['foo.txt' => 'this is foo', 'foo/bar.txt' => 'this is bar', 'dir/baz.txt' => 'baz contents']]
         ];
-    }
-
-    private function createArchive(string $filename, array $fileContents = []): void
-    {
-        $zip = new ZipArchive();
-        $zip->open($filename, ZipArchive::CREATE);
-        foreach ($fileContents as $file => $contents) {
-            $zip->addFromString($file, $contents);
-        }
-        $zip->close();
-    }
-
-    private function tempFile(): string
-    {
-        return tempnam(sys_get_temp_dir(), 'git');
     }
 }

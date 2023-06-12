@@ -43,4 +43,9 @@ class GitArchive
     {
         return $this->archive->numFiles;
     }
+
+    public function extractTo(string $directory): void
+    {
+        $this->archive->extractTo($directory);
+    }
 }
