@@ -48,15 +48,6 @@ class GitArchiveTest extends TestCase
     /**
      * @dataProvider exampleArchiveFiles
      */
-    public function testNumberOfFiles_ReturnsNumberOfFilesInArchive(array $files)
-    {
-        $archive = GitArchive::instance($this->createArchive($files));
-        $this->assertSame(count($files), $archive->numberOfFiles());
-    }
-
-    /**
-     * @dataProvider exampleArchiveFiles
-     */
     public function testExtractToMethod_CreatesFilesInGivenDirectory(array $files)
     {
         $archive = GitArchive::instance($this->createArchive($files));

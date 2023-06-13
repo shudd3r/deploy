@@ -50,11 +50,6 @@ class GitArchive
         return $files;
     }
 
-    public function numberOfFiles(): int
-    {
-        return $this->archive->numFiles;
-    }
-
     public function extractTo(string $directory): void
     {
         $this->archive->extractTo($directory);
