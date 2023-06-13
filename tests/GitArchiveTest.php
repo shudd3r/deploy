@@ -67,6 +67,15 @@ class GitArchiveTest extends TestCase
         }
     }
 
+    /**
+     * @dataProvider exampleArchiveFiles
+     */
+    public function testFilesMethod_ReturnsArchivedFilenames(array $files)
+    {
+        $archive = GitArchive::instance($this->createArchive($files));
+        $this->assertSame(array_keys($files), $archive->fileList());
+    }
+
     public static function exampleArchiveFiles(): array
     {
         return [

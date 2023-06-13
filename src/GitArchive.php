@@ -39,6 +39,17 @@ class GitArchive
         unlink($filename);
     }
 
+    public function fileList(): array
+    {
+        $files = [];
+        $idx   = 0;
+        while ($filename = $this->archive->getNameIndex($idx++)) {
+            $files[] = $filename;
+        }
+
+        return $files;
+    }
+
     public function numberOfFiles(): int
     {
         return $this->archive->numFiles;
