@@ -54,4 +54,10 @@ class GitArchive
     {
         $this->archive->extractTo($directory);
     }
+
+    public function saveAs(string $filename): void
+    {
+        file_put_contents($filename, $stream = fopen($this->archive->filename, 'r'));
+        fclose($stream);
+    }
 }

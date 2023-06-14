@@ -34,11 +34,12 @@ class GitArchiveTest extends TestCase
         $this->assertNull(GitArchive::instance($this->createFile('not archive contents')));
     }
 
-    public function testInstance_ArchiveFile_IsRemovedWithObjectReference()
+    public function testInstanceArchiveFile_IsRemovedWithObjectReference()
     {
         $archiveFile = $this->createArchive(['a.txt' => 'aaa']);
+        $archive     = GitArchive::instance($archiveFile);
 
-        $this->assertInstanceOf(GitArchive::class, $archive = GitArchive::instance($archiveFile));
+        $this->assertInstanceOf(GitArchive::class, $archive);
         $this->assertFileExists($archiveFile);
 
         unset($archive);
@@ -51,6 +52,7 @@ class GitArchiveTest extends TestCase
     public function testExtractToMethod_CreatesFilesInGivenDirectory(array $files)
     {
         $archive = GitArchive::instance($this->createArchive($files));
+
         $archive->extractTo($target = $this->tempDir());
         foreach ($files as $file => $contents) {
             $filename = $target . DIRECTORY_SEPARATOR . $file;
@@ -64,7 +66,18 @@ class GitArchiveTest extends TestCase
     public function testFilesMethod_ReturnsArchivedFilenames(array $files)
     {
         $archive = GitArchive::instance($this->createArchive($files));
+
         $this->assertSame(array_keys($files), $archive->fileList());
+    }
+
+    public function testSaveAsMethod_CreatesArchiveFileWithGivenName()
+    {
+        $originalFile = $this->createArchive(['foo.txt' => 'bar']);
+        $archive      = GitArchive::instance($originalFile);
+
+        $archive->saveAs($savedFile = $this->tempFile());
+        $this->assertFileEquals($originalFile, $savedFile);
+        $this->assertInstanceOf(GitArchive::class, GitArchive::instance($savedFile));
     }
 
     public static function exampleArchiveFiles(): array
